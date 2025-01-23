@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: Media Profile Avatar
-Plugin URI: https://yourwebsite.com/
+Plugin URI: https://faithcoder.com/
 Description: Allows users to upload and use custom profile pictures from the WordPress Media Library.
 Version: 1.0
-Author: Your Name
-Author URI: https://yourwebsite.com/
+Author: M Arif
+Author URI: https://faithcoder.com/
 License: GPL2
 Text Domain: media-profile-avatar
 */
