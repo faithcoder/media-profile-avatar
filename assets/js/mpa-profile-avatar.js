@@ -1,13 +1,13 @@
 jQuery(document).ready(function ($) {
     var mediaUploader;
 
-    $('#mpa_upload_profile_picture_button').click(function (e) {
+    $('#mpa-upload-avatar').click(function (e) {
         e.preventDefault();
         if (mediaUploader) {
             mediaUploader.open();
             return;
         }
-        mediaUploader = wp.media({
+        mediaUploader = wp.media.frames.file_frame = wp.media({
             title: 'Select Profile Picture',
             button: {
                 text: 'Use this picture',
@@ -16,17 +16,23 @@ jQuery(document).ready(function ($) {
         });
         mediaUploader.on('select', function () {
             var attachment = mediaUploader.state().get('selection').first().toJSON();
-            $('#mpa_custom_profile_picture').val(attachment.url);
-            $('#mpa_upload_profile_picture_button').after('<img src="' + attachment.url + '" style="max-width:100px; margin-top:10px; display:block;">');
-            $('#mpa_remove_profile_picture_button').show();
+            $('#mpa-profile-avatar').val(attachment.url);
+            
+            // Update or create preview image
+            if ($('#mpa-profile-preview').length) {
+                $('#mpa-profile-preview').attr('src', attachment.url);
+            } else {
+                $('#mpa-upload-avatar').after('<img src="' + attachment.url + '" id="mpa-profile-preview" style="max-width:100px; margin-top:10px; display:block;">');
+            }
+            $('#mpa-remove-avatar').show();
         });
         mediaUploader.open();
     });
 
-    $('#mpa_remove_profile_picture_button').click(function (e) {
+    $('#mpa-remove-avatar').click(function (e) {
         e.preventDefault();
-        $('#mpa_custom_profile_picture').val('');
+        $('#mpa-profile-avatar').val('');
         $(this).hide();
-        $('#mpa_upload_profile_picture_button').next('img').remove();
+        $('#mpa-profile-preview').remove();
     });
 });

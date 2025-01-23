@@ -1,84 +1,85 @@
 <?php
-/**
- * Plugin Name: Media Profile Avatar
- * Plugin URI:  https://example.com/media-profile-avatar
- * Description: Allows users to set custom profile pictures using the WordPress Media Library.
- * Version:     1.0.0
- * Author:      Your Name
- * Author URI:  https://example.com
- * License:     GPL-2.0+
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: media-profile-avatar
- * Domain Path: /languages
- */
+/*
+Plugin Name: Media Profile Avatar
+Plugin URI: https://yourwebsite.com/
+Description: Allows users to upload and use custom profile pictures from the WordPress Media Library.
+Version: 1.0
+Author: Your Name
+Author URI: https://yourwebsite.com/
+License: GPL2
+Text Domain: media-profile-avatar
+*/
 
-// Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+    exit; // Exit if accessed directly.
 }
 
-/**
- * Add custom profile picture field to user profiles.
- *
- * @param WP_User $user The current WP_User object.
- */
-function mpa_add_profile_picture_field( $user ) {
-    ?>
-    <h3><?php esc_html_e( 'Custom Profile Picture', 'media-profile-avatar' ); ?></h3>
+// Enqueue admin CSS and JS
+function mpa_enqueue_scripts($hook) {
+    if ( 'profile.php' !== $hook && 'user-edit.php' !== $hook ) {
+        return;
+    }
+
+    wp_enqueue_media();
+    wp_enqueue_script(
+        'mpa-profile-avatar',
+        plugin_dir_url( __FILE__ ) . 'assets/js/mpa-profile-avatar.js',
+        array( 'jquery' ),
+        '1.0',
+        true
+    );
+
+    wp_enqueue_style(
+        'mpa-profile-avatar',
+        plugin_dir_url( __FILE__ ) . 'assets/css/mpa-profile-avatar.css',
+        array(),
+        '1.0'
+    );
+}
+add_action( 'admin_enqueue_scripts', 'mpa_enqueue_scripts' );
+
+// Add the profile picture field to user profile
+function mpa_add_profile_avatar_field( $user ) { ?>
+    <h3><?php esc_html_e( 'Media Profile Avatar', 'media-profile-avatar' ); ?></h3>
     <table class="form-table">
         <tr>
-            <th><label for="mpa_custom_profile_picture"><?php esc_html_e( 'Profile Picture', 'media-profile-avatar' ); ?></label></th>
+            <th>
+                <label for="mpa_profile_avatar"><?php esc_html_e( 'Profile Picture', 'media-profile-avatar' ); ?></label>
+            </th>
             <td>
                 <?php
-                $custom_picture = get_user_meta( $user->ID, 'mpa_custom_profile_picture', true );
-                if ( $custom_picture ) {
-                    echo '<img src="' . esc_url( $custom_picture ) . '" style="max-width:100px; margin-bottom:10px; display:block;">';
+                $custom_avatar = get_user_meta($user->ID, 'mpa_profile_avatar', true);
+                if ($custom_avatar) {
+                    echo '<img src="' . esc_url($custom_avatar) . '" id="mpa-profile-preview" style="max-width:100px; margin-bottom:10px; display:block;">';
                 }
                 ?>
-                <input type="hidden" name="mpa_custom_profile_picture" id="mpa_custom_profile_picture" value="<?php echo esc_url( $custom_picture ); ?>">
-                <button type="button" class="button" id="mpa_upload_profile_picture_button"><?php esc_html_e( 'Select Profile Picture', 'media-profile-avatar' ); ?></button>
-                <button type="button" class="button" id="mpa_remove_profile_picture_button" style="display: <?php echo $custom_picture ? 'inline-block' : 'none'; ?>;"><?php esc_html_e( 'Remove Picture', 'media-profile-avatar' ); ?></button>
+                <input type="hidden" name="mpa_profile_avatar" id="mpa-profile-avatar" value="<?php echo esc_attr( get_user_meta( $user->ID, 'mpa_profile_avatar', true ) ); ?>" />
+                <input type="button" class="button" id="mpa-upload-avatar" value="<?php esc_attr_e( 'Select Profile Picture', 'media-profile-avatar' ); ?>" />
+                <input type="button" class="button" id="mpa-remove-avatar" value="<?php esc_attr_e( 'Remove Picture', 'media-profile-avatar' ); ?>" style="display: <?php echo $custom_avatar ? 'inline-block' : 'none'; ?>;" />
                 <br>
                 <span class="description"><?php esc_html_e( 'Select an image from the Media Library.', 'media-profile-avatar' ); ?></span>
             </td>
         </tr>
     </table>
-    <?php
-    wp_enqueue_media();
-    wp_enqueue_script( 'mpa-profile-picture-script', plugin_dir_url( __FILE__ ) . 'assets/js/mpa-profile-picture.js', [ 'jquery' ], '1.0.0', true );
-}
-add_action( 'show_user_profile', 'mpa_add_profile_picture_field' );
-add_action( 'edit_user_profile', 'mpa_add_profile_picture_field' );
+<?php }
+add_action( 'show_user_profile', 'mpa_add_profile_avatar_field' );
+add_action( 'edit_user_profile', 'mpa_add_profile_avatar_field' );
 
-/**
- * Save custom profile picture field.
- *
- * @param int $user_id The ID of the user being saved.
- */
-function mpa_save_profile_picture_field( $user_id ) {
+// Save the profile picture
+function mpa_save_profile_avatar( $user_id ) {
     if ( ! current_user_can( 'edit_user', $user_id ) ) {
         return false;
     }
 
-    if ( isset( $_POST['mpa_custom_profile_picture'] ) ) {
-        update_user_meta( $user_id, 'mpa_custom_profile_picture', esc_url_raw( $_POST['mpa_custom_profile_picture'] ) );
+    if ( isset( $_POST['mpa_profile_avatar'] ) ) {
+        update_user_meta( $user_id, 'mpa_profile_avatar', esc_url_raw( $_POST['mpa_profile_avatar'] ) );
     }
 }
-add_action( 'personal_options_update', 'mpa_save_profile_picture_field' );
-add_action( 'edit_user_profile_update', 'mpa_save_profile_picture_field' );
+add_action( 'personal_options_update', 'mpa_save_profile_avatar' );
+add_action( 'edit_user_profile_update', 'mpa_save_profile_avatar' );
 
-/**
- * Replace Gravatar with custom profile picture.
- *
- * @param string $avatar      Avatar image HTML.
- * @param mixed  $id_or_email ID, email address, or WP_User object.
- * @param int    $size        Size of the avatar.
- * @param string $default     Default avatar URL.
- * @param string $alt         Alt text for the avatar.
- *
- * @return string Modified avatar HTML.
- */
-function mpa_replace_gravatar( $avatar, $id_or_email, $size, $default, $alt ) {
+// Display profile picture on front end
+function mpa_get_avatar( $avatar, $id_or_email, $size, $default, $alt ) {
     $user = false;
 
     if ( is_numeric( $id_or_email ) ) {
@@ -90,20 +91,12 @@ function mpa_replace_gravatar( $avatar, $id_or_email, $size, $default, $alt ) {
     }
 
     if ( $user ) {
-        $custom_picture = get_user_meta( $user->ID, 'mpa_custom_profile_picture', true );
-        if ( $custom_picture ) {
-            $avatar = '<img src="' . esc_url( $custom_picture ) . '" alt="' . esc_attr( $alt ) . '" class="avatar avatar-' . esc_attr( $size ) . ' photo" width="' . esc_attr( $size ) . '" height="' . esc_attr( $size ) . '">';
+        $custom_avatar = get_user_meta( $user->ID, 'mpa_profile_avatar', true );
+        if ( $custom_avatar ) {
+            $avatar = '<img src="' . esc_url( $custom_avatar ) . '" alt="' . esc_attr($alt) . '" class="avatar avatar-' . esc_attr($size) . ' photo" width="' . esc_attr($size) . '" height="' . esc_attr($size) . '" />';
         }
     }
 
     return $avatar;
 }
-add_filter( 'get_avatar', 'mpa_replace_gravatar', 10, 5 );
-
-/**
- * Register JavaScript for the plugin.
- */
-function mpa_register_scripts() {
-    wp_register_script( 'mpa-profile-picture-script', plugin_dir_url( __FILE__ ) . 'assets/js/mpa-profile-picture.js', [ 'jquery' ], '1.0.0', true );
-}
-add_action( 'admin_enqueue_scripts', 'mpa_register_scripts' );
+add_filter( 'get_avatar', 'mpa_get_avatar', 10, 5 );
