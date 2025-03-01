@@ -1,0 +1,1 @@
+The Media Profile Avatar plugin allows users to upload and manage their profile pictures directly from the WordPress media library, eliminating the need to rely on Gravatar. Users can easily upload, update, or remove their profile pictures, providing a more flexible and personalized experience.
